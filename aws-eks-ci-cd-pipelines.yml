@@ -1,0 +1,53 @@
+trigger:
+- main
+
+resources:
+- repo: self
+
+variables:
+  tag: '$(Build.BuildId)'
+
+stages:
+
+- stage: Copy
+  displayName: Copy Manifest
+  jobs:
+  - job: Copy 
+    displayName: Copy Manifest
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+     - task: CopyFiles@2
+       inputs:
+         SourceFolder: '$(System.DefaultWorkingDirectory)'
+         Contents: '**/*.yaml'
+         TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+     - task: PublishBuildArtifacts@1
+       inputs:
+         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+         ArtifactName: 'manifests'
+         publishLocation: 'Container'
+
+
+- stage: Deploy
+  displayName: Deploy image
+  jobs:
+  - job: Deploy
+    displayName: Deploy
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          buildType: 'current'
+          artifactName: 'manifests'
+          itemPattern: '**/*.yaml'
+          targetPath: '$(System.ArtifactsDirectory)'
+      - task: KubernetesManifest@0
+        inputs:
+          action: 'deploy'
+          kubernetesServiceConnection: 'eks-stacks-dev'
+          namespace: 'default'
+          manifests: '$(System.ArtifactsDirectory)/kubernetes/deployment.yaml'
+    

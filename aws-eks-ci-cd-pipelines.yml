@@ -44,10 +44,11 @@ stages:
           artifactName: 'manifests'
           itemPattern: '**/*.yaml'
           targetPath: '$(System.ArtifactsDirectory)'
+      
       - task: KubernetesManifest@0
         inputs:
           action: 'deploy'
           kubernetesServiceConnection: 'eks-stacks-dev'
           namespace: 'default'
           manifests: '$(System.ArtifactsDirectory)/kubernetes/deployment.yaml'
-    
+          rolloutStatusTimeout: '300'

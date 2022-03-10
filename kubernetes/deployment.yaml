@@ -12,7 +12,9 @@ spec:
   selector:
     env: dev
     
-    
+---
+
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
